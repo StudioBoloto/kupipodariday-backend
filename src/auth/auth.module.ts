@@ -7,17 +7,18 @@ import { AuthService } from './auth.service';
 import { LocalStrategy } from './local.strategy';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
+import { JwtGuard } from './auth.guard';
 
 @Module({
   imports: [
     UsersModule,
     PassportModule,
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'JWT_SECRET',
+      secret: 'JWT_SECRET',
       signOptions: { expiresIn: '60m' },
     }),
   ],
-  providers: [AuthService, JwtStrategy, ConfigService, LocalStrategy],
+  providers: [AuthService, JwtStrategy, JwtGuard, ConfigService, LocalStrategy],
   controllers: [AuthController],
   exports: [AuthService, JwtStrategy, ConfigService, LocalStrategy],
 })
