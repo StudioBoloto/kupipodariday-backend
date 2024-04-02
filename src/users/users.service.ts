@@ -16,7 +16,7 @@ export class UsersService {
     return this.userRepository.save(user);
   }
 
-  async findOne(id: number): Promise<User> {
+  async findOne(id1: string, id: number): Promise<User> {
     return this.userRepository.findOne({ where: { id } });
   }
 
@@ -30,11 +30,24 @@ export class UsersService {
     return user;
   }
 
+  async findOneByEmail(email: string): Promise<User | undefined> {
+    const user = await this.userRepository.findOne({ where: { email } });
+
+    if (!user) {
+      throw new NotFoundException(`User with email ${email} not found.`);
+    }
+
+    return user;
+  }
+
   async find(conditions: any): Promise<User[]> {
     return this.userRepository.find(conditions);
   }
 
   async updateOne(id: number, updateUserDto: UpdateUserDto): Promise<void> {
+    if (updateUserDto.password) {
+      updateUserDto.password = await this.hashPassword(updateUserDto.password);
+    }
     await this.userRepository.update(id, updateUserDto);
   }
 

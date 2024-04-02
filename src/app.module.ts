@@ -5,6 +5,10 @@ import { UsersModule } from './users/users.module';
 import { WishesModule } from './wishes/wishes.module';
 import { WishlistsModule } from './wishlists/wishlists.module';
 import { OffersModule } from './offers/offers.module';
+import { User } from './users/entity/user.entity';
+import { Offer } from './offers/entity/offer.entity';
+import { Wish } from './wishes/entity/wish.entity';
+import { Wishlist } from './wishlists/entity/wishlist.entity';
 
 @Module({
   imports: [
@@ -15,7 +19,7 @@ import { OffersModule } from './offers/offers.module';
       username: 'student',
       password: 'password',
       database: 'kupipodariday',
-      entities: [],
+      entities: [User, Wish, Offer, Wishlist],
       synchronize: true,
     }),
     UsersModule,
