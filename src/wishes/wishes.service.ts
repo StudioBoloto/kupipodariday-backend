@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Wish } from './entity/wish.entity';
 import { CreateWishDto } from './dto/CreateWishDto';
 import { UpdateWishDto } from './dto/UpdateWishDto';
@@ -27,6 +27,22 @@ export class WishesService {
 
   async find(conditions: any): Promise<Wish[]> {
     return this.wishRepository.find(conditions);
+  }
+
+  async findManyByKey(
+    orderBy: { [key: string]: 'ASC' | 'DESC' },
+    take: number,
+  ): Promise<Wish[]> {
+    return this.wishRepository.find({
+      order: orderBy,
+      take: take,
+    });
+  }
+
+  async findManyById(ids: number[]) {
+    return await this.wishRepository.findBy({
+      id: In(ids),
+    });
   }
 
   async updateOne(id: number, updateWishDto: UpdateWishDto): Promise<void> {
