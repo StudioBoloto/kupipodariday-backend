@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { UpdateUserDto } from '../users/dto/UpdateUserDto';
@@ -31,27 +31,15 @@ export class AuthService {
   }
 
   async login(user: any): Promise<SigninUserResponseDto> {
-    const payload = { username: user.username, sub: user.userId };
+    const payload = { username: user.username, sub: user.id };
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token: await this.jwtService.signAsync(payload),
     };
   }
 
   async register(createUserDto: UpdateUserDto): Promise<User> {
-    const userByUsername = await this.usersService.findOneByUsername(
-      createUserDto.username,
-    );
-    if (userByUsername) {
-      throw new BadRequestException('User with this username already exists');
-    }
-
-    const userByEmail = await this.usersService.findOneByEmail(
-      createUserDto.email,
-    );
-    if (userByEmail) {
-      throw new BadRequestException('User with this email already exists');
-    }
-
-    return this.usersService.create(createUserDto);
+    const user = await this.usersService.create(createUserDto);
+    delete user.password;
+    return user;
   }
 }

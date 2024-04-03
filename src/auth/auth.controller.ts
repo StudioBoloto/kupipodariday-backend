@@ -11,9 +11,7 @@ export class AuthController {
   @UseGuards(LocalGuard)
   @Post('signin')
   signin(@Req() req) {
-    this.logger.log(
-      'Received signin request with data: ' + JSON.stringify(req),
-    );
+    this.logger.log('Received signin request for user: ' + req.user.id);
     return this.authService.login(req.user);
   }
 
