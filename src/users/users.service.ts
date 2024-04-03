@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entity/user.entity';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { UpdateUserDto } from './dto/UpdateUserDto';
 import * as bcrypt from 'bcrypt';
 
@@ -44,8 +44,21 @@ export class UsersService {
     return user;
   }
 
+  async findMany(query: string): Promise<User[]> {
+    return await this.userRepository.find({
+      where: [{ username: Like(`%${query}%`) }, { email: Like(`%${query}%`) }],
+    });
+  }
+
   async find(conditions: any): Promise<User[]> {
     return this.userRepository.find(conditions);
+  }
+
+  async findWishesByUserId(id: number): Promise<User | null> {
+    return await this.userRepository.findOne({
+      relations: { wishes: true },
+      where: { id },
+    });
   }
 
   async updateOne(id: number, updateUserDto: UpdateUserDto): Promise<void> {

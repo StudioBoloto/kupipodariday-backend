@@ -1,6 +1,8 @@
 import {
   BadRequestException,
   ForbiddenException,
+  forwardRef,
+  Inject,
   Injectable,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -9,12 +11,15 @@ import { Wish } from './entity/wish.entity';
 import { CreateWishDto } from './dto/CreateWishDto';
 import { UpdateWishDto } from './dto/UpdateWishDto';
 import { User } from '../users/entity/user.entity';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class WishesService {
   constructor(
     @InjectRepository(Wish)
+    @Inject(forwardRef(() => UsersService))
     private wishRepository: Repository<Wish>,
+    private readonly usersService: UsersService,
   ) {}
 
   async getWishWithRaised(wishId: number) {
@@ -57,6 +62,14 @@ export class WishesService {
     return await this.wishRepository.findBy({
       id: In(ids),
     });
+  }
+
+  async findManyByOwner(username: string): Promise<Wish[]> {
+    const user = await this.usersService.findOneByUsername(username);
+    if (!user) {
+      return [];
+    }
+    return await this.wishRepository.findBy({ owner: user });
   }
 
   async updateOne(

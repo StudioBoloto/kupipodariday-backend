@@ -15,10 +15,11 @@ export class OffersService {
   ) {}
 
   async create(createOfferDto: CreateOfferDto, user: User): Promise<Offer> {
-    const wish = await this.wishesService.getWishWithRaised(
+    const wishWithRaised = await this.wishesService.getWishWithRaised(
       createOfferDto.itemId,
     );
-    const currentRaised = parseFloat(wish.wish_raised);
+    const currentRaised = parseFloat(wishWithRaised.wish_raised);
+    const wish = await this.wishesService.findOne(createOfferDto.itemId);
     if (wish.owner.id === user.id) {
       throw new BadRequestException('You cannot raise your own wish.');
     }
