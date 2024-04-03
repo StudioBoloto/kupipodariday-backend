@@ -17,6 +17,16 @@ export class WishesService {
     private wishRepository: Repository<Wish>,
   ) {}
 
+  async getWishWithRaised(wishId: number) {
+    return this.wishRepository
+      .createQueryBuilder('wish')
+      .leftJoinAndSelect('wish.offers', 'offer')
+      .select('wish.*')
+      .addSelect('SUM(offer.amount)', 'wish_raised')
+      .where('wish.id = :wishId', { wishId })
+      .groupBy('wish.id')
+      .getRawOne();
+  }
   async create(createWishDto: CreateWishDto, owner: User): Promise<Wish> {
     const wish = this.wishRepository.create({ ...createWishDto, owner });
     return this.wishRepository.save(wish);
