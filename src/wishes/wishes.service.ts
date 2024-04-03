@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Wish } from './entity/wish.entity';
@@ -45,11 +49,44 @@ export class WishesService {
     });
   }
 
-  async updateOne(id: number, updateWishDto: UpdateWishDto): Promise<void> {
+  async updateOne(
+    id: number,
+    updateWishDto: UpdateWishDto,
+    user: User,
+  ): Promise<void> {
+    const wish = await this.wishRepository.findOne({
+      relations: { owner: true, offers: true },
+      where: { id },
+    });
+    if (updateWishDto.price && wish.raised > 0) {
+      throw new ForbiddenException(
+        'You cannot change the price if there are already people willing to raise in',
+      );
+    }
+    if (user.id !== wish.owner.id) {
+      throw new BadRequestException('You do not own this wish.');
+    }
+
     await this.wishRepository.update(id, updateWishDto);
   }
 
-  async removeOne(id: number): Promise<void> {
-    await this.wishRepository.delete(id);
+  async removeOne(id: number, user: User): Promise<void> {
+    const wish = await this.wishRepository.findOne({
+      relations: { owner: true, offers: true },
+      where: { id },
+    });
+    if (user.id !== wish.owner.id) {
+      throw new BadRequestException('You do not own this wish.');
+    }
+    await this.wishRepository.remove(wish);
+  }
+
+  async copyOne(id: number, user: User): Promise<void> {
+    const wish = await this.wishRepository.findOne({
+      where: { id },
+    });
+    wish.owner = user;
+    delete wish.id;
+    await this.wishRepository.save(wish);
   }
 }
