@@ -1,7 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entity/user.entity';
-import { Like, Repository } from 'typeorm';
+import { Equal, Like, Not, Repository } from 'typeorm';
 import { UpdateUserDto } from './dto/UpdateUserDto';
 import * as bcrypt from 'bcrypt';
 
@@ -11,8 +15,20 @@ export class UsersService {
     @InjectRepository(User)
     private userRepository: Repository<User>,
   ) {}
+
   async create(createUserDto: UpdateUserDto): Promise<User> {
-    const { password } = createUserDto;
+    const { username, email, password } = createUserDto;
+
+    const userExists = await this.userRepository.findOne({
+      where: [{ username }, { email }],
+    });
+
+    if (userExists) {
+      throw new BadRequestException(
+        'User with this email or username already registered.',
+      );
+    }
+
     const user = this.userRepository.create({
       ...createUserDto,
       password: await this.hashPassword(password),
@@ -62,8 +78,24 @@ export class UsersService {
   }
 
   async updateOne(id: number, updateUserDto: UpdateUserDto): Promise<void> {
-    if (updateUserDto.password) {
-      updateUserDto.password = await this.hashPassword(updateUserDto.password);
+    const { username, email, password } = updateUserDto;
+
+    if (username || email) {
+      const userExists = await this.userRepository.findOne({
+        where: [
+          { id: Not(Equal(id)), username },
+          { id: Not(Equal(id)), email },
+        ],
+      });
+
+      if (userExists) {
+        throw new BadRequestException(
+          'User with this email or username already exists.',
+        );
+      }
+    }
+    if (password) {
+      updateUserDto.password = await this.hashPassword(password);
     }
     await this.userRepository.update(id, updateUserDto);
   }
